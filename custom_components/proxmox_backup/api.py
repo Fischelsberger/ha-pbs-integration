@@ -28,11 +28,17 @@ class ProxmoxBackupAPI:
     async def get_datastore_status(self, store_name):
         return await self._get_json(f"admin/datastore/{store_name}/status")
 
-    async def get_snapshots(self, store_name):
-        return await self._get_json(f"admin/datastore/{store_name}/snapshots")
+    async def get_snapshots(self, store_name, namespace_name):
+        url = f"admin/datastore/{store_name}/snapshots"
+        if namespace_name != "" or namespace_name != "":
+            url += f"?ns={namespace_name}"
+        return await self._get_json(url)
 
     async def get_gc_status(self):
         return await self._get_json("admin/gc")
+
+    async def get_namespaces(self, store_name):
+        return await self._get_json(f"admin/datastore/{store_name}/namespace")
 
     async def close(self):
         if self._session:
