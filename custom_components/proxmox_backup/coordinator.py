@@ -25,6 +25,7 @@ class ProxmoxBackupCoordinator(DataUpdateCoordinator):
 
             usage_data = {}
             snapshots = []
+            snapshots_ns = {}
             gc_data = []
 
             # Gather usage info for each datastore
@@ -46,6 +47,7 @@ class ProxmoxBackupCoordinator(DataUpdateCoordinator):
                     snapshots_resp = await self.api.get_snapshots(
                         store_name, namespace_name
                     )
+                    snapshots_ns[namespace_name] = snapshots_resp.get("data", [])
                     snapshots.extend(snapshots_resp.get("data", []))
 
             # Get GC status
@@ -55,6 +57,7 @@ class ProxmoxBackupCoordinator(DataUpdateCoordinator):
             return {
                 "usage": usage_data,
                 "snapshots": snapshots,
+                "snapshots_ns": snapshots_ns,
                 "gc": gc_data,
             }
         # Handle any errors in the API response

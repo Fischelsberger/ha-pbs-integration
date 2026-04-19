@@ -6,6 +6,7 @@ from .coordinator import ProxmoxBackupCoordinator
 from .const import DOMAIN
 import logging
 from datetime import datetime
+import re
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,17 +44,26 @@ async def async_setup_entry(
         new_entities = []
         snapshot_counts_per_node = {}
         snapshot_sizes_per_node = {}
+        snapshot_data = coordinator.data.get("snapshots_ns", [])
 
-        for snap in coordinator.data.get("snapshots", []):
-            backup_type = snap.get("backup-type")
-            backup_id = snap.get("backup-id")
-            if not backup_type or not backup_id:
+        for namespace, snapshots in snapshot_data.items():
+            if not snapshots:
                 continue
 
-            key = (backup_type, backup_id)
-            if key not in added_snapshot_keys:
-                new_entities.append(ProxmoxSnapshotSensorPerNode(coordinator, backup_type, backup_id))
-                added_snapshot_keys.add(key)
+            for snap in snapshots:
+                backup_type = snap.get("backup-type")
+                backup_id = snap.get("backup-id")
+                if not backup_type or not backup_id:
+                    continue
+
+                key = (backup_type, backup_id, namespace)
+                if key not in added_snapshot_keys:
+                    new_entities.append(
+                        ProxmoxSnapshotSensorPerNode(
+                            coordinator, backup_type, backup_id, namespace
+                        )
+                    )
+                    added_snapshot_keys.add(key)
 
         if new_entities:
             async_add_entities(new_entities)
@@ -128,10 +138,12 @@ class ProxmoxBackupSensor(Entity):
 
 
 class ProxmoxSnapshotSensorPerNode(Entity):
-    def __init__(self, coordinator, backup_type, backup_id):
+    def __init__(self, coordinator, backup_type, backup_id, namespace="#root"):
         self.coordinator = coordinator
         self._backup_type = backup_type
         self._backup_id = backup_id
+        self._namespace = namespace
+        self._namespace_id = re.sub(r"[^a-zA-Z0-9]", "_", namespace)
 
     async def async_added_to_hass(self):
         self.async_on_remove(
@@ -140,11 +152,11 @@ class ProxmoxSnapshotSensorPerNode(Entity):
 
     @property
     def name(self):
-        return f"Proxmox Backup {self._backup_type}/{self._backup_id} Snapshots"
+        return f"Proxmox Backup (NS: {self._namespace}) {self._backup_type}/{self._backup_id} Snapshots"
 
     @property
     def unique_id(self):
-        return f"proxmox_backup_{self._backup_type}_{self._backup_id}_snapshots"
+        return f"proxmox_backup_{self._namespace_id}_{self._backup_type}_{self._backup_id}_snapshots"
 
     @property
     def state(self):
