@@ -138,12 +138,12 @@ class ProxmoxBackupSensor(Entity):
 
 
 class ProxmoxSnapshotSensorPerNode(Entity):
-    def __init__(self, coordinator, backup_type, backup_id, namespace="#root"):
+    def __init__(self, coordinator, backup_type, backup_id, namespace):
         self.coordinator = coordinator
         self._backup_type = backup_type
         self._backup_id = backup_id
-        self._namespace = namespace
-        self._namespace_id = re.sub(r"[^a-zA-Z0-9]", "_", namespace)
+        self._namespace = "#root" if namespace is None or namespace == "" else namespace
+        self._namespace_id = re.sub(r"[^a-zA-Z0-9]", "_", self._namespace)
 
     async def async_added_to_hass(self):
         self.async_on_remove(
