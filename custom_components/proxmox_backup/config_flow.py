@@ -15,8 +15,9 @@ class ProxmoxBackupConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             host = user_input["pbs_host"]
             token_id = user_input["pbs_token_id"]
             token = user_input["pbs_token"]
+            check_ssl = user_input["check_ssl"]
 
-            api = ProxmoxBackupAPI(host, token_id, token)
+            api = ProxmoxBackupAPI(host, token_id, token, check_ssl)
             try:
                 await api.get_datastores()
             except Exception:
@@ -31,6 +32,7 @@ class ProxmoxBackupConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 # If the user input is not valid, show the form again with errors.
         data_schema = vol.Schema({
             vol.Required("pbs_host"): str,
+            vol.Required("check_ssl", default=True): bool,
             vol.Required("pbs_token_id"): str,
             vol.Required("pbs_token"): str,
             vol.Optional("update_interval", default=60): int,  # Default to 60 seconds

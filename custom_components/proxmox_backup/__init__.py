@@ -17,11 +17,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     host = entry.data.get("pbs_host")
     token_id = entry.data.get("pbs_token_id")
     token = entry.data.get("pbs_token")
+    check_ssl = entry.data.get("check_ssl")
     update_interval = entry.options.get("update_interval", entry.data.get("update_interval", 60))
 
     try:
         # Initialize the API and coordinator
-        api = ProxmoxBackupAPI(host, token_id, token)
+        api = ProxmoxBackupAPI(host, token_id, token, check_ssl)
         coordinator = ProxmoxBackupCoordinator(hass, api, update_interval)
         await coordinator.async_config_entry_first_refresh()
 
