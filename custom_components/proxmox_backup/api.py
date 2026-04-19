@@ -12,7 +12,9 @@ class ProxmoxBackupAPI:
 
     async def _get_session(self):
         if self._session is None:
-            self._session = aiohttp.ClientSession(headers=self.headers, connector=aiohttp.TCPConnector(ssl=False))
+            self._session = aiohttp.ClientSession(
+                headers=self.headers, connector=aiohttp.TCPConnector(ssl=False)
+            )
         return self._session
 
     async def _get_json(self, endpoint):

@@ -18,7 +18,7 @@ class ProxmoxBackupCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         """Fetch data from the Proxmox Backup Server API."""
-#        This method is called by the DataUpdateCoordinator to fetch data.
+        # This method is called by the DataUpdateCoordinator to fetch data.
         try:
             datastores_resp = await self.api.get_datastores()
             datastores = datastores_resp.get("data", [])
@@ -36,10 +36,10 @@ class ProxmoxBackupCoordinator(DataUpdateCoordinator):
                 usage_resp = await self.api.get_datastore_status(store_name)
                 usage = usage_resp.get("data", {})
                 usage_data[store_name] = usage
-                
+
                 namespaces_resp = await self.api.get_namespaces(store_name)
                 namespaces = namespaces_resp.get("data", [])
-                
+
                 for ns in namespaces:
                     namespace_name = ns.get("ns")
                     # Gather snapshots for each datastore
@@ -51,14 +51,13 @@ class ProxmoxBackupCoordinator(DataUpdateCoordinator):
             # Get GC status
             gc_resp = await self.api.get_gc_status()
             gc_data = gc_resp.get("data", [])
-#            # Prepare the final data structure
+            # Prepare the final data structure
             return {
                 "usage": usage_data,
                 "snapshots": snapshots,
                 "gc": gc_data,
             }
-#           # Handle any errors in the API response
+        # Handle any errors in the API response
         except Exception as err:
             _LOGGER.error("Error fetching data from Proxmox Backup Server: %s", err)
             raise UpdateFailed(f"Error fetching data: {err}")
-

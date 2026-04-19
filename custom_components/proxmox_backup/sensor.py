@@ -8,6 +8,8 @@ import logging
 from datetime import datetime
 
 _LOGGER = logging.getLogger(__name__)
+
+
 # This file defines sensors for Proxmox Backup integration in Home Assistant.
 # It includes sensors for usage, snapshots per node, total snapshots, and garbage collection status.
 async def async_setup_entry(
@@ -70,7 +72,9 @@ class ProxmoxBackupSensor(Entity):
         self._store_name = store_name
 
     async def async_added_to_hass(self):
-        self.async_on_remove(self.coordinator.async_add_listener(self.async_write_ha_state))
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self.async_write_ha_state)
+        )
 
     @property
     def name(self):
@@ -122,6 +126,7 @@ class ProxmoxBackupSensor(Entity):
     def available(self):
         return self.coordinator.last_update_success
 
+
 class ProxmoxSnapshotSensorPerNode(Entity):
     def __init__(self, coordinator, backup_type, backup_id):
         self.coordinator = coordinator
@@ -129,7 +134,9 @@ class ProxmoxSnapshotSensorPerNode(Entity):
         self._backup_id = backup_id
 
     async def async_added_to_hass(self):
-        self.async_on_remove(self.coordinator.async_add_listener(self.async_write_ha_state))
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self.async_write_ha_state)
+        )
 
     @property
     def name(self):
@@ -158,20 +165,26 @@ class ProxmoxSnapshotSensorPerNode(Entity):
 
     def _get_snapshot_count(self):
         return sum(
-            1 for snap in self.coordinator.data.get("snapshots", [])
-            if snap.get("backup-type") == self._backup_type and snap.get("backup-id") == self._backup_id
+            1
+            for snap in self.coordinator.data.get("snapshots", [])
+            if snap.get("backup-type") == self._backup_type
+            and snap.get("backup-id") == self._backup_id
         )
 
     def _get_snapshot_size(self):
         return sum(
-            snap.get("size", 0) for snap in self.coordinator.data.get("snapshots", [])
-            if snap.get("backup-type") == self._backup_type and snap.get("backup-id") == self._backup_id
+            snap.get("size", 0)
+            for snap in self.coordinator.data.get("snapshots", [])
+            if snap.get("backup-type") == self._backup_type
+            and snap.get("backup-id") == self._backup_id
         )
 
     def _get_latest_snapshot_comment(self):
         snapshots = [
-            snap for snap in self.coordinator.data.get("snapshots", [])
-            if snap.get("backup-type") == self._backup_type and snap.get("backup-id") == self._backup_id
+            snap
+            for snap in self.coordinator.data.get("snapshots", [])
+            if snap.get("backup-type") == self._backup_type
+            and snap.get("backup-id") == self._backup_id
         ]
         if not snapshots:
             return None
@@ -206,13 +219,14 @@ class ProxmoxSnapshotSensorPerNode(Entity):
         return self.coordinator.last_update_success
 
 
-
 class ProxmoxSnapshotTotalSensor(Entity):
     def __init__(self, coordinator):
         self.coordinator = coordinator
 
     async def async_added_to_hass(self):
-        self.async_on_remove(self.coordinator.async_add_listener(self.async_write_ha_state))
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self.async_write_ha_state)
+        )
 
     @property
     def name(self):
@@ -228,13 +242,14 @@ class ProxmoxSnapshotTotalSensor(Entity):
 
     @property
     def extra_state_attributes(self):
-        total_size = sum(snap.get("size", 0) for snap in self.coordinator.data.get("snapshots", []))
+        total_size = sum(
+            snap.get("size", 0) for snap in self.coordinator.data.get("snapshots", [])
+        )
         return {
             "total_snapshot_count": len(self.coordinator.data.get("snapshots", [])),
             "total_snapshot_size_bytes": total_size,
             "total_snapshot_size_human": self._human_readable_size(total_size),
         }
-
 
     def _human_readable_size(self, size, decimal_places=2):
         for unit in ["B", "KB", "MB", "GB", "TB"]:
@@ -251,6 +266,7 @@ class ProxmoxSnapshotTotalSensor(Entity):
     def available(self):
         return self.coordinator.last_update_success
 
+
 # ProxmoxBackupGCSensor is a sensor that reports the garbage collection status of a Proxmox Backup store.
 class ProxmoxBackupGCSensor(Entity):
     def __init__(self, coordinator, store):
@@ -258,7 +274,9 @@ class ProxmoxBackupGCSensor(Entity):
         self._store = store
 
     async def async_added_to_hass(self):
-        self.async_on_remove(self.coordinator.async_add_listener(self.async_write_ha_state))
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self.async_write_ha_state)
+        )
 
     @property
     def name(self):
@@ -287,8 +305,9 @@ class ProxmoxBackupGCSensor(Entity):
             "disk_bytes": gc_data.get("disk-bytes"),
             "deduplication_factor": dedup_factor,
         }
-# This method retrieves the garbage collection data for the specified store.
-# It searches through the coordinator's data for the "gc" entries and returns the one matching the store.
+
+    # This method retrieves the garbage collection data for the specified store.
+    # It searches through the coordinator's data for the "gc" entries and returns the one matching the store.
     def _get_gc_data(self):
         for entry in self.coordinator.data.get("gc", []):
             if entry.get("store") == self._store:
@@ -302,7 +321,8 @@ class ProxmoxBackupGCSensor(Entity):
             return datetime.fromtimestamp(ts).isoformat()
         except Exception:
             return str(ts)
-# This method calculates the deduplication factor based on the index and disk data bytes.
+
+    # This method calculates the deduplication factor based on the index and disk data bytes.
     def _calculate_dedup_factor(self, gc_data):
         index_data = gc_data.get("index-data-bytes", 0)
         disk_data = gc_data.get("disk-bytes", 1)
